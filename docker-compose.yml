@@ -1,0 +1,43 @@
+version: '3.3'
+
+networks:
+  dbnet:
+    external: true
+
+services:
+  mysql:
+    image: mysql:latest
+    container_name: db_videos
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - ./structDB:/docker-entrypoint-initdb.d
+    environment:
+      MYSQL_DATABASE: videos
+      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_USER: videos
+      MYSQL_PASSWORD: 123456
+      MYSQL_HOST: mysql
+      LANG: C.UTF-8
+    ports:
+      - 3306:3306
+    networks:
+      - dbnet
+
+  videos_api_rest:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    container_name: videos_api_rest
+    env_file: .env
+    ports:
+      - 3000:3000
+    volumes:
+      - .:/videos_api_rest
+    links:
+      - mysql
+    depends_on:
+      - mysql
+    stdin_open: true
+    tty: true
+    networks:
+      - dbnet
